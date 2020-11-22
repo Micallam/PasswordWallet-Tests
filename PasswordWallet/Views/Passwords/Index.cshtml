@@ -1,0 +1,59 @@
+﻿@model IEnumerable<PasswordWallet.Models.PasswordModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+<h1>Passwords</h1>
+<p>
+    <a asp-action="Create">Create password</a>
+    @Html.ActionLink("Logout", "Index", "Users")
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.IdUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WebAddress)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Login)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PasswordHash)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.IdUser)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WebAddress)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Login)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PasswordHash)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.ActionLink("Details", "Details", new { passwordHash = item.PasswordHash }) 
+            </td>
+            <td>
+                @Html.ActionLink("Delete", "Delete", new { passwordHash = item.PasswordHash })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
