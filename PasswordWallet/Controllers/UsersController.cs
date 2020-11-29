@@ -27,7 +27,7 @@ namespace PasswordWallet.Controllers
 
         public UsersController(IConfiguration configuration = null, IDbContext dbContext = null)
         {
-            if (configuration is IConfiguration)
+            if (configuration != null)
             {
                 _configuration = configuration;
             }
@@ -45,6 +45,17 @@ namespace PasswordWallet.Controllers
         // GET: Users
         public ActionResult Index()
         {
+            try
+            {
+                string message = HttpContext.Session.GetString("LoginMessage");
+
+                if (message != "")
+                { 
+                    ModelState.AddModelError("Error", message);
+                }
+            }
+            catch { }
+
             return View(GetUserList());
         }
 
@@ -102,7 +113,31 @@ namespace PasswordWallet.Controllers
         [HttpPost]
         public ActionResult Login(UserLogin userLogin)
         {
-            int loggedUserId = CheckLoginCridentials(userLogin);
+            int loggedUserId = 0;
+
+            try
+            {
+                loggedUserId = ProcessLogin(userLogin);
+
+                HttpContext.Session.SetString(
+                    "LoginMessage",
+                    ""
+                    );
+            }
+            catch (LoginBlocadeException ex)
+            {
+                HttpContext.Session.SetString(
+                    "LoginMessage",
+                    ex.Message
+                    );
+            }
+            catch (UnknownLoginException ex)
+            {
+                HttpContext.Session.SetString(
+                    "LoginMessage",
+                    ex.Message
+                    );
+            }
 
             if (loggedUserId != 0)
             {
@@ -121,16 +156,147 @@ namespace PasswordWallet.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
+        [HttpPost]
+        public ActionResult DeleteIpBlocade()
+        {
+            string ip = "";
+            try
+            {
+                ip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            }
+            catch { }
+
+            DeleteIpBlocadeIfExists(ip);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public int DeleteIpBlocadeIfExists(string ipAddress)
+        {
+            LoginBlocade loginBlocade = dbContext.GetBlocadeByIp(ipAddress);
+
+            if (loginBlocade == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return dbContext.DeleteIpBlocade(ipAddress);
+            }
+        }
+
         public int CheckLoginCridentials(UserLogin userLogin)
         {
             UserModel user = dbContext.GetUserByLogin(userLogin.Login);
+            string userPassHash;
+            string loginPassHash;
 
-            string userPassHash = user.PasswordHash;
-            string loginPassHash = user.IsPasswordKeptAsHash ?
-                GetPasswordHashSHA512(userLogin.Password, user.Salt, pepper) :
-                GetPasswordHMAC(userLogin.Password, user.Salt, pepper);
+            CheckLoginBlocades(user == null ? 0 : user.Id);
+
+            if (user != null)
+            {
+                userPassHash = user.PasswordHash;
+                loginPassHash = user.IsPasswordKeptAsHash ?
+                    GetPasswordHashSHA512(userLogin.Password, user.Salt, pepper) :
+                    GetPasswordHMAC(userLogin.Password, user.Salt, pepper);
+            }
+            else
+            {
+                return 0;
+            }
 
             return userPassHash == loginPassHash ? user.Id : 0;
+        }
+
+        public void CheckLoginBlocades(int userId)
+        {
+            LoginBlocade loginBlocade = dbContext.GetActiveBlocadeByUserId(userId);
+            string ip = "";
+            try
+            {
+                ip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            }
+            catch { }
+
+            if (loginBlocade == null)
+            {
+                loginBlocade =
+                    dbContext
+                    .GetActiveBlocadeByIp(ip);
+
+                if (loginBlocade != null)
+                {
+                    throw new LoginBlocadeException(
+                        "This IP address is blocked until " +
+                        loginBlocade.BlockUntil +
+                        ". Failed attemps: " +
+                        loginBlocade.FailCount);
+                }
+            }
+            else
+            {
+                throw new LoginBlocadeException(
+                    "This user is blocked until " +
+                    loginBlocade.BlockUntil +
+                    ". Failed attemps: " +
+                    loginBlocade.FailCount);
+            }
+        }
+
+        public int ProcessLogin(UserLogin cridentials)
+        {
+            int userId = CheckLoginCridentials(cridentials);
+
+            LoginStatus status = userId == 0 ? LoginStatus.Failed : LoginStatus.Success;
+            
+            LogUserLogin(cridentials.Login, status);
+
+            return userId;
+        }
+
+        public int LogUserLogin(string login, LoginStatus loginStatus)
+        {
+            UserModel user = dbContext.GetUserByLogin(login);
+            int ret;
+            string ip = "";
+            try
+            {
+                ip = Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            }
+            catch { }
+
+            LoginHelper loginHelper = new LoginHelper(dbContext);
+
+            if (user != null)
+            {
+                ret = dbContext.LogUserLogin(
+                    user.Id,
+                    loginStatus,
+                    ip);
+
+                switch (loginStatus)
+                {
+                    case LoginStatus.Success:
+                        loginHelper.ClearUserBlocade(user.Id);
+                        loginHelper.ClearIpBlocade(ip);
+
+                        break;
+                    case LoginStatus.Failed:
+                        loginHelper.CreateOrUpdateLoginUserIdBlocade(user.Id);
+                        loginHelper.CreateOrUpdateLoginIpBlocade(ip);
+
+                        break;
+                }
+            }
+            else
+            {
+                loginHelper.CreateOrUpdateLoginIpBlocade(ip);
+
+                throw new UnknownLoginException();
+            }
+
+            return ret;
         }
 
         // GET: Users/Edit/5

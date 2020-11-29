@@ -60,6 +60,14 @@ namespace PasswordWalletxUnitTest
                 .Setup(m => m.GetUserByLogin(It.IsAny<string>()))
                 .Returns(user);
 
+            mockDbContext
+                .Setup(m => m.GetActiveBlocadeByUserId(It.IsAny<int>()))
+                .Returns(null as LoginBlocade);
+
+            mockDbContext
+                .Setup(m => m.GetActiveBlocadeByIp(It.IsAny<string>()))
+                .Returns(null as LoginBlocade);
+
             UserLogin loginCridentials = new UserLogin()
             {
                 Login = userLogin,
@@ -116,6 +124,63 @@ namespace PasswordWalletxUnitTest
             Assert.Throws<ArgumentNullException>(
                 () => usersController.CreatePassword(password)
                 );
+        }
+
+        [Fact]
+        public void TestLogUserLogin_ThrowsException_WhenUnknownUserIdIsGiven()
+        {
+            Mock<IDbContext> mockDbContext = new Mock<IDbContext>();
+            mockDbContext
+                .Setup(m => m.GetUserByLogin(It.IsAny<string>()))
+                .Returns(null as UserModel);
+
+            UsersController usersController = new UsersController(dbContext: mockDbContext.Object);
+
+            Assert.Throws<UnknownLoginException>(
+                () => usersController.LogUserLogin("login", LoginStatus.Failed));
+        }
+
+        [Fact]
+        public void TestDeleteIpBlocadeIfExists_ReturnsOne_WhenBlocadeExists()
+        {
+            string ipToTest = "1:1:1:1";
+
+            Mock<IDbContext> mockDbContext = new Mock<IDbContext>();
+            mockDbContext
+                .Setup(m => m.GetBlocadeByIp(ipToTest))
+                .Returns(new LoginBlocade());
+
+            mockDbContext
+                .Setup(m => m.DeleteIpBlocade(ipToTest))
+                .Returns(1);
+
+            UsersController usersController = new UsersController(dbContext: mockDbContext.Object);
+
+            int expected = 1;
+            int actual = usersController.DeleteIpBlocadeIfExists(ipToTest);
+
+            Assert.Equal(expected, actual);
+        }
+        [Fact]
+        public void TestDeleteIpBlocadeIfExists_ReturnsZero_WhenBlocadeDoesntExists()
+        {
+            string ipToTest = "1:1:1:1";
+
+            Mock<IDbContext> mockDbContext = new Mock<IDbContext>();
+            mockDbContext
+                .Setup(m => m.GetBlocadeByIp(ipToTest))
+                .Returns(null as LoginBlocade);
+
+            mockDbContext
+                .Setup(m => m.DeleteIpBlocade(ipToTest))
+                .Returns(0);
+
+            UsersController usersController = new UsersController(dbContext: mockDbContext.Object);
+
+            int expected = 0;
+            int actual = usersController.DeleteIpBlocadeIfExists(ipToTest);
+
+            Assert.Equal(expected, actual);
         }
     }
 }

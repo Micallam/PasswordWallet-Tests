@@ -27,7 +27,7 @@ namespace PasswordWallet.Controllers
 
         public PasswordsController(IConfiguration configuration = null, IDbContext dbContext = null)
         {
-            if (_configuration is IConfiguration)
+            if (configuration != null)
             {
                 _configuration = configuration;
             }
@@ -48,6 +48,14 @@ namespace PasswordWallet.Controllers
             userInfo = JsonConvert.DeserializeObject<UserInfo>(HttpContext.Session.GetString("UserInfo"));
 
             return View(dbContext.GetPasswordListByUserId(userInfo.Id));
+        }
+
+        // GET: Passwords/ShowLog
+        public ActionResult ShowLog()
+        {
+            userInfo = JsonConvert.DeserializeObject<UserInfo>(HttpContext.Session.GetString("UserInfo"));
+
+            return View(dbContext.GetLoginLogListByUserId(userInfo.Id));
         }
 
         // GET: Passwords/Create

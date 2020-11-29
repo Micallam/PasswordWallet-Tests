@@ -29,5 +29,29 @@ namespace PasswordWallet
         PasswordModel GetPasswordByHash(string passwordHash);
 
         int DeletePassword(string passwordHash);
+
+        int LogUserLogin(int userId, LoginStatus loginStatus, string ipAddress);
+
+        List<LoginLog> GetLoginLogListByUserId(int userId);
+
+        int SaveUserBlocade(LoginBlocade loginBlocade);
+
+        int UpdateUserBlocade(LoginBlocade loginBlocade);
+
+        int DeleteUserBlocade(int userId);
+
+        int SaveIpBlocade(LoginBlocade loginBlocade);
+
+        int UpdateIpBlocade(LoginBlocade loginBlocade);
+
+        int DeleteIpBlocade(string ipAddress);
+
+        LoginBlocade GetBlocadeByUserId(int userId);
+
+        LoginBlocade GetBlocadeByIp(string ipAddress);
+
+        LoginBlocade GetActiveBlocadeByUserId(int userId);
+
+        LoginBlocade GetActiveBlocadeByIp(string ipAddress);
     }
 }

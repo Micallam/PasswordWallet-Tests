@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Index";
 }
+</script>
 
 <h1>Users</h1>
 
@@ -10,6 +11,19 @@
     <a asp-action="Create">Create New</a>
     <a asp-action="Login">Login</a>
 </p>
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Error"].Errors.Count > 0)
+{
+    <div class="alert alert-danger">
+        <strong>Error!</strong> @ViewData.ModelState["Error"].Errors.First().ErrorMessage
+    </div>
+}
+
+<form asp-action="DeleteIpBlocade">
+    <div class="form-group">
+        <input type="submit" value="Delete IP Blocade" class="btn btn-primary" />
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
@@ -32,30 +46,31 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Salt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PasswordHash)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Login)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsPasswordKeptAsHash)
-            </td>
-            <td>
-                @Html.ActionLink("Delete", "Delete", new { id = item.Id }) 
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { id = item.Id }) 
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Salt)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PasswordHash)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Login)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IsPasswordKeptAsHash)
+                </td>
+                <td>
+                    @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.Id })
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

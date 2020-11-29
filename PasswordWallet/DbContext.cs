@@ -105,5 +105,111 @@ namespace PasswordWallet
 
             return db.Execute(sqlQuery);
         }
+
+        public int LogUserLogin(int userId, LoginStatus loginStatus, string ipAddress)
+        {
+            LoginLog log = new LoginLog()
+            {
+                UserId = userId,
+                LoginDateTime = DateTime.Now,
+                LoginStatus = loginStatus,
+                IpAddress = ipAddress
+            };
+
+            string sqlQuery = "Insert Into LoginLog " +
+                "(UserId, LoginDateTime, LoginStatus, IpAddress) " +
+                "Values(@UserId, @LoginDateTime, @LoginStatus, @IpAddress)";
+
+            return db.Execute(sqlQuery, log);
+        }
+
+        public List<LoginLog> GetLoginLogListByUserId(int userId)
+        {
+            return db.Query<LoginLog>($"Select * From LoginLog where UserId = {userId}").ToList(); ;
+        }
+
+        public LoginBlocade GetBlocadeByUserId(int userId)
+        {
+            return db.Query<LoginBlocade>(sql: $"select * from LoginBlocade where UserId ='{userId}'")
+                .SingleOrDefault();
+        }
+
+        public LoginBlocade GetBlocadeByIp(string ipAddress)
+        {
+            return db.Query<LoginBlocade>(sql: $"select * from LoginBlocade where IpAddress ='{ipAddress}'")
+                .SingleOrDefault();
+        }
+
+        public int SaveUserBlocade(LoginBlocade loginBlocade)
+        {
+            string sqlQuery = "Insert Into LoginBlocade " +
+                "(UserId, FailCount, BlockUntil) " +
+                "Values(@UserId, @FailCount, @BlockUntil)";
+
+            return db.Execute(sqlQuery, loginBlocade);
+        }
+
+        public int UpdateUserBlocade(LoginBlocade loginBlocade)
+        {
+            string sqlQuery = "Update LoginBlocade " +
+                $"set FailCount = {loginBlocade.FailCount}, " +
+                $"BlockUntil =  '{loginBlocade.BlockUntil:yyyy-MM-dd HH:mm:ss.fff}' " +
+                $"where UserId = '{loginBlocade.UserId}'";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public int SaveIpBlocade(LoginBlocade loginBlocade)
+        {
+            string sqlQuery = "Insert Into LoginBlocade " +
+                "(IpAddress, FailCount, BlockUntil) " +
+                "Values(@IpAddress, @FailCount, @BlockUntil)";
+
+            return db.Execute(sqlQuery, loginBlocade);
+        }
+        
+        public int UpdateIpBlocade(LoginBlocade loginBlocade)
+        {
+            string sqlQuery = "Update LoginBlocade " +
+                $"set FailCount = {loginBlocade.FailCount}, " +
+                $"BlockUntil =  '{loginBlocade.BlockUntil:yyyy-MM-dd HH:mm:ss.fff}' " +
+                $"where IpAddress = '{loginBlocade.IpAddress}'";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public int DeleteUserBlocade(int userId)
+        {
+            string sqlQuery = $"Delete From LoginBlocade " +
+                $"WHERE UserId = {userId}";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public int DeleteIpBlocade(string ipAddress)
+        {
+            string sqlQuery = $"Delete From LoginBlocade " +
+                $"WHERE IpAddress = '{ipAddress}'";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public LoginBlocade GetActiveBlocadeByUserId(int userId)
+        {
+            return db.Query<LoginBlocade>(
+                sql: $"select * from LoginBlocade " +
+                $"where UserId ='{userId}'" +
+                $"and BlockUntil >= '{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}'")
+                    .SingleOrDefault();
+        }
+
+        public LoginBlocade GetActiveBlocadeByIp(string ipAddress)
+        {
+            return db.Query<LoginBlocade>(
+                sql: $"select * from LoginBlocade " +
+                $"where IpAddress ='{ipAddress}'" +
+                $"and BlockUntil >= '{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}'")
+                    .SingleOrDefault();
+        }
     }
 }
