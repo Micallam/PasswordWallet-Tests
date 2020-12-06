@@ -53,5 +53,22 @@ namespace PasswordWallet
         LoginBlocade GetActiveBlocadeByUserId(int userId);
 
         LoginBlocade GetActiveBlocadeByIp(string ipAddress);
+        
+        List<SharePasswordKey> GetSharePasswordKeyListByOwnerIdAndPasswordId(int ownerId, int passwordId);
+        
+        int CreateSharePasswordKey(SharePasswordKey sharePasswordKey);
+
+        int DeleteSharePasswordKey(int id);
+
+        SharePasswordKey GetSharePasswordKey(int id);
+
+        SharePasswordKey GetSharePasswordKeyByOwnerIdAndSharedForUser(int ownerId, int sharedForUser);
+
+        int CreateSharedPassword(SharedPassword sharedPassword);
+
+        SharedPassword GetSharedPasswordByHash(string passwordHash);
+
+        PasswordModel GetPassword(int id);
+        int DeleteSharedPasswordByHash(string passwordHash);
     }
 }

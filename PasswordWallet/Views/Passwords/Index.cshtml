@@ -3,12 +3,30 @@
 @{
     ViewData["Title"] = "Index";
 }
+@{
+    var mode = ViewBag.Message;
+}
+
 <h1>Passwords</h1>
 <p>
     <a asp-action="Create">Create password</a>
     @Html.ActionLink("Show login log", "ShowLog")
     @Html.ActionLink("Logout", "Index", "Users")
 </p>
+
+<form asp-action="ChangeMode">
+    <div class="form-group">
+        <input type="submit" value="@mode" class="btn btn-primary" id="ChangeModeBtn" />
+    </div>
+</form>
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState["Warning"].Errors.Count > 0)
+{
+    <div class="alert alert-warning">
+        <strong>Error!</strong> @ViewData.ModelState["Warning"].Errors.First().ErrorMessage
+    </div>
+}
+
 <table class="table">
     <thead>
         <tr>
@@ -27,11 +45,17 @@
             <th>
                 @Html.DisplayNameFor(model => model.Description)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsShared)
+            </th>
+            <th></th>
+            <th></th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+        @foreach (var item in Model)
+        {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.IdUser)
@@ -49,12 +73,19 @@
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
             <td>
-                @Html.ActionLink("Details", "Details", new { passwordHash = item.PasswordHash }) 
+                @Html.DisplayFor(modelItem => item.IsShared)
+            </td>
+            <td>
+                @Html.ActionLink("Details", "Details", new { passwordHash = item.PasswordHash })
             </td>
             <td>
                 @Html.ActionLink("Delete", "Delete", new { passwordHash = item.PasswordHash })
             </td>
+            <td>
+                @Html.ActionLink("Share", "SharePassword", new { passwordHash = item.PasswordHash })
+            </td>
         </tr>
-}
+        }
     </tbody>
 </table>
+

@@ -1,0 +1,40 @@
+﻿@model IEnumerable<PasswordWallet.Models.SharePasswordKey>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Password sharing</h1>
+
+<p>
+    <a asp-action="Create">New share</a>
+    @Html.ActionLink("Back to passwords", "Index", "Passwords")
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Shared for:
+            </th>
+            <th>
+                Key: 
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.SharedForUser)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.KeyHash)
+            </td>
+            <td>
+                @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

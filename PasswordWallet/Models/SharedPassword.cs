@@ -5,15 +5,14 @@ using System.Threading.Tasks;
 
 namespace PasswordWallet.Models
 {
-    public class PasswordModel
+    public class SharedPassword
     {
         public int Id { get; set; }
-        public int IdUser { get; set; }
-        public string WebAddress { get; set; }
         public string Login { get; set; }
         public string PasswordHash { get; set; }
+        public int SharedForUser { get; set; }
+        public int OwnerId { get; set; }
+        public string WebAddress { get; set; }
         public string Description { get; set; }
-        public bool IsShared { get; set; }
-
     }
 }

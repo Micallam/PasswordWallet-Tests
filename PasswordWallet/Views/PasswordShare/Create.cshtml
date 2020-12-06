@@ -1,0 +1,34 @@
+﻿@model PasswordWallet.Models.SharePasswordKey
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create a key for sharing</h1>
+
+<h4>Sharing key</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="SharedForUser" class="control-label">Share for: </label>
+                <input asp-for="SharedForUser" class="form-control" />
+                <span asp-validation-for="SharedForUser" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="KeyHash" class="control-label">Key: </label>
+                <input asp-for="KeyHash" class="form-control" />
+                <span asp-validation-for="KeyHash" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

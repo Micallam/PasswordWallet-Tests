@@ -45,7 +45,7 @@ namespace PasswordWallet
 
         public List<UserModel> GetUsersList()
         {
-            return db.Query<UserModel>("Select * From Users").ToList();
+            return db.Query<UserModel>("Select * From Users where Id != '999'").ToList();
         }
 
         public int UpdateUser(UserModel userToUpdate)
@@ -71,7 +71,15 @@ namespace PasswordWallet
 
         public List<PasswordModel> GetPasswordListByUserId(int userId)
         {
-            return db.Query<PasswordModel>($"Select * From Passwords where IdUser = {userId}").ToList(); ;
+            return db.Query<PasswordModel>(
+                $"select Id, Login, PasswordHash, IdUser, WebAddress, Description, 0 as IsShared " +
+                $"from Passwords " +
+                $"where IdUser = {userId} " +
+                $"union " +
+                $"select Id, Login, PasswordHash, SharedForUser, WebAddress, Description, 1 as IsShared " +
+                $"from SharedPassword " +
+                $"where SharedForUser = {userId}"
+                ).ToList(); ;
         }
 
         public int UpdatePasswordHash(int userId, string oldPassword, string newPassword)
@@ -210,6 +218,77 @@ namespace PasswordWallet
                 $"where IpAddress ='{ipAddress}'" +
                 $"and BlockUntil >= '{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}'")
                     .SingleOrDefault();
+        }
+
+        public List<SharePasswordKey> GetSharePasswordKeyListByOwnerIdAndPasswordId(int ownerId, int passwordId)
+        {
+            return db.Query<SharePasswordKey>($"Select * From SharePasswordKey " +
+                $"where OwnerId = {ownerId}" +
+                $"and PasswordId = {passwordId}").ToList();
+        }
+
+        public int CreateSharePasswordKey(SharePasswordKey sharePasswordKey)
+        {
+            string sqlQuery = "Insert Into SharePasswordKey " +
+                "(PasswordId, SharedForUser, OwnerId, KeyHash) " +
+                "Values(@PasswordId, @SharedForUser, @OwnerId, @KeyHash)";
+
+            return db.Execute(sqlQuery, sharePasswordKey);
+        }
+
+        public int DeleteSharePasswordKey(int id)
+        {
+            string sqlQuery = $"Delete From SharePasswordKey " +
+                $"WHERE Id = {id}";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public SharePasswordKey GetSharePasswordKey(int id)
+        {
+            return db.Query<SharePasswordKey>(
+                sql: $"select * from SharePasswordKey where Id = {id};")
+                .SingleOrDefault();
+        }
+
+        public int CreateSharedPassword(SharedPassword sharedPassword)
+        {
+            string sqlQuery = "Insert Into SharedPassword " +
+                "(Login, PasswordHash, SharedForUser, OwnerId, WebAddress, Description) " +
+                "Values(@Login, @PasswordHash, @SharedForUser, @OwnerId, @WebAddress, @Description)";
+
+            return db.Execute(sqlQuery, sharedPassword);
+        }
+
+        public PasswordModel GetPassword(int id)
+        {
+            return db.Query<PasswordModel>(
+                sql: $"select * from Passwords where Id = {id};")
+                .SingleOrDefault();
+        }
+
+        public int DeleteSharedPasswordByHash(string passwordHash)
+        {
+            string sqlQuery = $"Delete From SharedPassword " +
+                $"WHERE PasswordHash = '{passwordHash}'";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public SharedPassword GetSharedPasswordByHash(string passwordHash)
+        {
+            string sqlQuery = $"Select * From SharedPassword WHERE PasswordHash = '{passwordHash}'";
+
+            return db.Query<SharedPassword>(sqlQuery).SingleOrDefault();
+        }
+
+        public SharePasswordKey GetSharePasswordKeyByOwnerIdAndSharedForUser(int ownerId, int sharedForUser)
+        {
+            string sqlQuery = $"Select * From SharePasswordKey " +
+                $"WHERE OwnerId = {ownerId} " +
+                $"and SharedForUser = {sharedForUser}";
+
+            return db.Query<SharePasswordKey>(sqlQuery).SingleOrDefault();
         }
     }
 }

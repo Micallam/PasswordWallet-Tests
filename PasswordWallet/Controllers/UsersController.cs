@@ -150,6 +150,8 @@ namespace PasswordWallet.Controllers
                             LoggedUserPassword = userLogin.Password 
                         }));
 
+                HttpContext.Session.SetString("ViewMode", ViewMode.View.ToString());
+
                 return RedirectToAction(nameof(Index), "Passwords");
             }
 
