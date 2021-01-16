@@ -14,7 +14,7 @@ namespace PasswordWallet
 
     public class LoginHelper
     {
-        IDbContext dbContext;
+        readonly IDbContext dbContext;
 
         public LoginHelper(IDbContext dbContext)
         {

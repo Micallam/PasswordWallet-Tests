@@ -134,6 +134,11 @@ namespace PasswordWallet.Controllers
                     WebAddress = passToShare.WebAddress,
                     Description = passToShare.Description
                 });
+
+            ActivityLog.Log(
+                userInfo.Id,
+                ActionType.SharePassword,
+                dbContext);
         }
 
         private string ChangePasswordHash(string oldHash, string oldKey, string newKey)

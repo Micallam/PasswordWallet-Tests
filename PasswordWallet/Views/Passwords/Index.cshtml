@@ -51,6 +51,8 @@
             <th></th>
             <th></th>
             <th></th>
+            <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -79,10 +81,16 @@
                 @Html.ActionLink("Details", "Details", new { passwordHash = item.PasswordHash })
             </td>
             <td>
+                @Html.ActionLink("Edit", "Edit", new { passwordId = item.Id })
+            </td>
+            <td>
                 @Html.ActionLink("Delete", "Delete", new { passwordHash = item.PasswordHash })
             </td>
             <td>
                 @Html.ActionLink("Share", "SharePassword", new { passwordHash = item.PasswordHash })
+            </td>
+            <td>
+                @Html.ActionLink("Changes", "PasswordChanges", new { passwordId = item.Id })
             </td>
         </tr>
         }

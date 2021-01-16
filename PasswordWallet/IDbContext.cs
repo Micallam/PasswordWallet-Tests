@@ -18,6 +18,8 @@ namespace PasswordWallet
 
         int UpdateUser(UserModel userToUpdate);
 
+        int UpdatePassword(PasswordModel password);
+
         int DeleteUser(int userId);
 
         List<PasswordModel> GetPasswordListByUserId(int userId);
@@ -70,5 +72,15 @@ namespace PasswordWallet
 
         PasswordModel GetPassword(int id);
         int DeleteSharedPasswordByHash(string passwordHash);
+
+        int LogActivity(ActivityLog activity);
+
+        List<ActivityLog> GetActivityLogsByUserId(int userId);
+
+        int LogPasswordChange(PasswordChange change);
+
+        List<PasswordChange> GetPasswordChangesById(int passwordId);
+
+        PasswordChange GetPasswordChange(int id);
     }
 }

@@ -110,6 +110,12 @@ namespace PasswordWallet.Controllers
             return View(userLogin);
         }
 
+        // GET: Passwords/ShowActivityLog
+        public ActionResult ShowActivityLog(int userId)
+        {
+            return View(dbContext.GetActivityLogsByUserId(userId));
+        }
+
         [HttpPost]
         public ActionResult Login(UserLogin userLogin)
         {
@@ -419,12 +425,10 @@ namespace PasswordWallet.Controllers
 
             byte[] secretTextBytes = encoding.GetBytes(secretText);
 
-            using (var sha512 = SHA512.Create())
-            {
-                byte[] hashmessage = sha512.ComputeHash(secretTextBytes);
+            using var sha512 = SHA512.Create();
+            byte[] hashmessage = sha512.ComputeHash(secretTextBytes);
 
-                return Convert.ToBase64String(hashmessage);
-            }
+            return Convert.ToBase64String(hashmessage);
         }
         
         public static string GetPasswordHMAC(string _password, string _salt, string _pepper = pepper)
@@ -440,12 +444,10 @@ namespace PasswordWallet.Controllers
             byte[] secretTextBytes = encoding.GetBytes(secretText);
             byte[] keyBytes = encoding.GetBytes(_key);
 
-            using (var hmac = new HMACSHA512(keyBytes))
-            {
-                byte[] hashmessage = hmac.ComputeHash(secretTextBytes);
+            using var hmac = new HMACSHA512(keyBytes);
+            byte[] hashmessage = hmac.ComputeHash(secretTextBytes);
 
-                return Convert.ToBase64String(hashmessage);
-            }
+            return Convert.ToBase64String(hashmessage);
         }
     }
 }

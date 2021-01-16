@@ -290,5 +290,57 @@ namespace PasswordWallet
 
             return db.Query<SharePasswordKey>(sqlQuery).SingleOrDefault();
         }
+
+        public int LogActivity(ActivityLog activity)
+        {
+            string sqlQuery = "Insert Into ActivityLog " +
+                "(ActionType, UserId, ActionDateTime) " +
+                "Values(@ActionType, @UserId, @ActionDateTime)";
+
+            return db.Execute(sqlQuery, activity);
+        }
+
+        public List<ActivityLog> GetActivityLogsByUserId(int userId)
+        {
+            return db.Query<ActivityLog>(
+                sql: $"select * from ActivityLog where UserId = {userId};")
+                .ToList();
+        }
+
+        public int UpdatePassword(PasswordModel password)
+        {
+            string sqlQuery = $"UPDATE Passwords " +
+                $"set PasswordHash='{password.PasswordHash}'" +
+                $",Login='{password.Login}'" +
+                $",WebAddress='{password.WebAddress}'" +
+                $",Description='{password.Description}' " +
+                $"WHERE Id={password.Id}";
+
+            return db.Execute(sqlQuery);
+        }
+
+        public int LogPasswordChange(PasswordChange change)
+        {
+            string sqlQuery = "Insert Into PasswordChange " +
+                "(PasswordId, UserId, OldData, NewData, ChangeDateTime) " +
+                "Values(@PasswordId, @UserId, @OldData, @NewData, @ChangeDateTime)";
+
+            return db.Execute(sqlQuery, change);
+        }
+
+        public List<PasswordChange> GetPasswordChangesById(int passwordId)
+        {
+            return db.Query<PasswordChange>(
+                sql: $"select * from PasswordChange where PasswordId = {passwordId};")
+                .ToList();
+        }
+
+        public PasswordChange GetPasswordChange(int id)
+        {
+            string sqlQuery = $"Select * From PasswordChange " +
+                $"WHERE Id = {id} ";
+
+            return db.Query<PasswordChange>(sqlQuery).SingleOrDefault();
+        }
     }
 }

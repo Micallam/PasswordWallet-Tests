@@ -174,6 +174,10 @@ namespace PasswordWallet.Controllers
                 password.PasswordHash = EncryptionHelper.EncryptPasswordAES(password.PasswordHash, userInfo.LoggedUserPassword);
 
                 CreatePassword(password);
+                PasswordChange.LogPasswordCreate(
+                    dbContext.GetPasswordByHash(password.PasswordHash), 
+                    dbContext);
+                ActivityLog.Log(userInfo.Id, ActionType.CreatePassword, dbContext);
 
                 return RedirectToAction(nameof(Index), new { idUser = password.IdUser });
             }
@@ -193,6 +197,85 @@ namespace PasswordWallet.Controllers
             return dbContext.CreatePassword(password);
         }
 
+        public ActionResult PasswordChanges(int passwordId)
+        {
+            return View(dbContext.GetPasswordChangesById(passwordId));
+        }
+
+        public ActionResult RestorePasswordState(int passwordChangeId)
+        {
+            PasswordChange passwordChange = dbContext.GetPasswordChange(passwordChangeId);
+            PasswordModel oldPassword;
+            PasswordModel newPassword;
+
+            if (String.IsNullOrEmpty(passwordChange.OldData))
+            { 
+                newPassword = PasswordChange.StringToPassword(passwordChange.NewData);
+                oldPassword = dbContext.GetPassword(passwordChange.PasswordId);
+            }
+            else if (String.IsNullOrEmpty(passwordChange.NewData))
+            {
+                newPassword = PasswordChange.StringToPassword(passwordChange.OldData);
+                oldPassword = dbContext.GetPassword(passwordChange.PasswordId);
+            }
+            else
+            {
+                newPassword = PasswordChange.StringToPassword(passwordChange.OldData);
+                oldPassword = PasswordChange.StringToPassword(passwordChange.NewData);
+            }
+
+            dbContext.UpdatePassword(newPassword);
+
+            PasswordChange.LogPasswordEdit(oldPassword, newPassword, dbContext);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public ActionResult Edit(int passwordId)
+        {
+            PasswordModel password = dbContext.GetPassword(passwordId);
+
+            if (password == null)
+            {
+                HttpContext.Session.SetString(
+                    "WarningMessage",
+                    "You cannot edit this password! You are not an owner."
+                    );
+
+                return RedirectToAction(nameof(Index));
+            }
+            else if (ValidateViewMode("Cannot Edit. You are in view mode!"))
+            {
+                return View(password);
+            }
+            else
+            {
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(int id, PasswordModel password)
+        {
+            UserInfo userInfo = GetUserInfo();
+
+            password.PasswordHash = 
+                EncryptionHelper.EncryptPasswordAES(
+                    password.PasswordHash,
+                    userInfo.LoggedUserPassword);
+
+            PasswordChange.LogPasswordEdit(
+                dbContext.GetPassword(password.Id),
+                password,
+                dbContext);
+
+            dbContext.UpdatePassword(password);
+            ActivityLog.Log(userInfo.Id, ActionType.UpdatePassword, dbContext);
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: Passwords/Details/5
         public ActionResult Details(string passwordHash)
         {
@@ -202,6 +285,11 @@ namespace PasswordWallet.Controllers
             if (password != null)
             {
                 password.PasswordHash = EncryptionHelper.DecryptPasswordAES(password.PasswordHash, userInfo.LoggedUserPassword);
+
+                ActivityLog.Log(
+                    GetUserInfo().Id,
+                    ActionType.ViewPassword,
+                    dbContext);
 
                 return View(password);
             }
@@ -308,7 +396,16 @@ namespace PasswordWallet.Controllers
                 {
                     string passwordHash = collection["PasswordHash"];
 
+                    PasswordChange.LogPasswordDelete(
+                        dbContext.GetPasswordByHash(passwordHash),
+                        dbContext);
+
                     dbContext.DeletePassword(passwordHash);
+
+                    ActivityLog.Log(
+                        GetUserInfo().Id, 
+                        ActionType.DeletePassword, 
+                        dbContext);
                 }
 
                 return RedirectToAction(nameof(Index));
